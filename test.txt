@@ -1,0 +1,95 @@
+response 1:
+ID: DISP-88289
+Seller Name: Northstar Homeware Pvt Ltd. 7
+Dispute Details: FBF dock receipt says 48 carton units received but inwarding report counts 43. Seal was intact at dock, 
+requesting reconciliation. Batch reference 7; manifest and hub evidence are available.
+
+AI Response : {
+  "disputeCategory": "Warehouse Inwarding Shortage",
+  "evidenceVerified": true,
+  "evidenceType": "Dock receipt",
+  "claimedWeightKg": null,
+  "billedWeightKg": null,
+  "requestedRefundAmount": 0,
+  "riskLevel": "MEDIUM",
+  "summary": "FBF dock receipt shows 48 cartons received but inwarding count is 43 units with intact seal, 
+batch reference 7, manifest and hub evidence available for reconciliation."
+}
+
+response 2:
+ID: DISP-88235
+Seller Name: BlueDart Cargo 2
+Dispute Details: Manifest ingestion failed during planned maintenance and caused an SLA miss.
+ Requesting waiver against bulletin MB-221. Batch reference 2; manifest and hub evidence are available.
+
+AI Response : {
+  "disputeCategory": "SLA Penalty Waiver",
+  "evidenceVerified": true,
+  "evidenceType": "Manifest and hub evidence",
+  "claimedWeightKg": null,
+  "billedWeightKg": null,
+  "requestedRefundAmount": 0,
+  "riskLevel": "LOW",
+  "summary": "Merchant requests SLA penalty waiver due to manifest ingestion failure during planned maintenance (bulletin MB-221), with manifest and hub evidence available for batch reference 2."
+}
+
+response:3
+ID: DISP-88265
+Seller Name: Northstar Homeware Pvt Ltd. 5
+Dispute Details: FBF dock receipt says 48 carton units received but inwarding report counts 43. Seal was intact at dock, requesting reconciliation. Batch reference 5; manifest and hub evidence are available.
+
+AI Response : {
+  "disputeCategory": "Warehouse Inwarding Shortage",
+  "evidenceVerified": true,
+  "evidenceType": "Dock receipt",
+  "claimedWeightKg": null,
+  "billedWeightKg": null,
+  "requestedRefundAmount": 0,
+  "riskLevel": "MEDIUM",
+  "summary": "FBF dock receipt shows 48 cartons received but inwarding report counts only 43 cartons with intact seal, requesting reconciliation with batch reference 5 and available manifest/hub evidence."
+}
+
+
+response 4:
+ID: DISP-88253
+Seller Name: Northstar Homeware Pvt Ltd. 4
+Dispute Details: FBF dock receipt says 48 carton units received but inwarding report counts 43. Seal was intact at dock, requesting reconciliation. Batch reference 4; manifest and hub evidence are available.
+
+AI Response : {
+  "disputeCategory": "Warehouse Inwarding Shortage",
+  "evidenceVerified": true,
+  "evidenceType": "Dock receipt",
+  "claimedWeightKg": null,
+  "billedWeightKg": null,
+  "requestedRefundAmount": 0,
+  "riskLevel": "MEDIUM",
+  "summary": "FBF dock receipt shows 48 carton units received but inwarding report counts only 43 units with intact seal, requesting reconciliation with manifest and hub evidence available for batch reference 4."
+}
+
+response 5:
+ID: DISP-88286
+Seller Name: Delhivery Express 7
+Dispute Details: POD scan shows carton was weighed at BLR-HUB-04, but invoice has 4.8kg. Please audit the 3D laser scan and reverse excess billing. Batch reference 7; manifest and hub evidence are available.
+
+AI Response : {
+  "disputeCategory": "Weight Discrepancy",
+  "evidenceVerified": true,
+  "evidenceType": "POD scan, 3D laser scan, manifest, hub evidence",
+  "claimedWeightKg": 4.8,
+  "billedWeightKg": null,
+  "requestedRefundAmount": 0,
+  "riskLevel": "MEDIUM",
+  "summary": "Merchant disputes weight discrepancy between POD scan at BLR-HUB-04 and invoice showing 4.8kg, requesting audit of 3D laser scan and reversal of excess billing with batch reference 7 and hub evidence available."
+}
+
+
+so Gemini, all went good, AI Skill has done and given the responses , can you check?
+
+
+
+
+All required resolution steps completed successfully:
+ (1) Dispute analyzed per SLA Penalty Waiver policy, 
+ (2) Evidence gap identified (bEvidenceVerified=false), 
+ (3) REQUEST_EVIDENCE action determined as appropriate per policy section 4 and 7.E, 
+ (4) Email n

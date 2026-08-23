@@ -1,0 +1,1384 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dispute Workflow Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f2f7f8;
+      --bg-soft: #e9f5f2;
+      --ink: #10202b;
+      --muted: #5c6d78;
+      --line: #cfdae0;
+      --card: #ffffff;
+      --brand: #1768c2;
+      --brand-deep: #12345d;
+      --teal: #007f78;
+      --amber: #a75b00;
+      --rose: #ad3b43;
+      --ok: #087456;
+      --coral: #e56b5d;
+      --violet: #6655b8;
+      --shadow: 0 22px 42px rgba(16, 32, 43, 0.1);
+      --shadow-light: 0 10px 24px rgba(16, 32, 43, 0.07);
+      --radius-xl: 24px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: 'Urbanist', sans-serif;
+      font-weight: 300;
+      background:
+        radial-gradient(circle at 8% 4%, rgba(23, 104, 194, 0.2), transparent 31%),
+        radial-gradient(circle at 95% 14%, rgba(0, 127, 120, 0.17), transparent 27%),
+        radial-gradient(circle at 45% 100%, rgba(229, 107, 93, 0.13), transparent 28%),
+        linear-gradient(180deg, #f8fbfb 0%, #edf3f5 100%);
+      overflow-x: hidden;
+    }
+
+    body::before,
+    body::after {
+      content: '';
+      position: fixed;
+      z-index: -1;
+      border-radius: 999px;
+      filter: blur(20px);
+      pointer-events: none;
+    }
+
+    body::before {
+      width: 300px;
+      height: 300px;
+      left: -120px;
+      top: 180px;
+      background: rgba(13, 99, 201, 0.14);
+    }
+
+    body::after {
+      width: 320px;
+      height: 320px;
+      right: -150px;
+      bottom: 40px;
+      background: rgba(0, 127, 123, 0.14);
+    }
+
+    .container {
+      width: min(1240px, calc(100% - 28px));
+      margin: 18px auto 30px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(130deg, #102e55 0%, #1768c2 48%, #00837b 100%);
+      border-radius: var(--radius-xl);
+      color: #fff;
+      padding: 26px;
+      box-shadow: var(--shadow);
+      animation: entrance 0.45s ease;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      right: -32px;
+      top: -40px;
+      width: 220px;
+      height: 220px;
+      background: conic-gradient(from 90deg, rgba(255, 207, 128, 0.25), rgba(255, 255, 255, 0));
+      border-radius: 999px;
+      transform: rotate(-20deg);
+    }
+
+    .hero-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-family: 'Urbanist', sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.2rem, 3.2vw, 2rem);
+      letter-spacing: 0.01em;
+    }
+
+    .hero p {
+      margin: 9px 0 0;
+      max-width: 660px;
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.45;
+      font-size: 0.94rem;
+    }
+
+    .hero-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .chip {
+      border: 1px solid rgba(255, 255, 255, 0.34);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: #effffc;
+      background: rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(4px);
+    }
+
+    .hero-clock {
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      padding: 7px 11px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      background: rgba(255, 255, 255, 0.14);
+      min-width: 110px;
+      text-align: center;
+    }
+
+    .queue-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 14px;
+      width: fit-content;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 12px;
+      padding: 9px 11px;
+      background: rgba(7, 38, 67, 0.26);
+      position: relative;
+      z-index: 1;
+    }
+
+    .queue-control label {
+      margin: 0;
+      color: #fff;
+      font-size: 0.78rem;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 22px;
+      flex: 0 0 auto;
+    }
+
+    .switch input {
+      width: 0;
+      height: 0;
+      opacity: 0;
+    }
+
+    .switch-track {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.3);
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .switch-track::before {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      left: 3px;
+      top: 3px;
+      border-radius: 999px;
+      background: #fff;
+      transition: transform 0.2s ease;
+    }
+
+    .switch input:checked + .switch-track {
+      background: #39c8a5;
+    }
+
+    .switch input:checked + .switch-track::before {
+      transform: translateX(18px);
+    }
+
+    .queue-timer {
+      color: #d9f8ee;
+      font-size: 0.73rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .admin-actions {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .admin-action {
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 10px;
+      padding: 8px 10px;
+      color: #fff;
+      background: rgba(7, 38, 67, 0.22);
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .admin-action:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    .admin-action:disabled {
+      opacity: 0.55;
+      cursor: wait;
+      transform: none;
+    }
+
+    .admin-message {
+      color: #d9f8ee;
+      font-size: 0.74rem;
+      font-weight: 700;
+    }
+
+    .metrics {
+      margin-top: 16px;
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    }
+
+    .metric {
+      position: relative;
+      border: 1px solid #d3dfe4;
+      background: rgba(255, 255, 255, 0.88);
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      box-shadow: var(--shadow-light);
+      overflow: hidden;
+      animation: entrance 0.5s ease;
+    }
+
+    .metric::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--metric-accent, linear-gradient(90deg, #1768c2, #00a29c));
+      opacity: 0.85;
+    }
+
+    .metric-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      margin-top: 8px;
+      font-family: 'Urbanist', sans-serif;
+      font-size: 1.72rem;
+      font-weight: 700;
+      color: #102c42;
+      line-height: 1;
+    }
+
+    .workspace {
+      margin-top: 14px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid #d1dfe1;
+      border-radius: var(--radius-xl);
+      padding: 12px;
+      box-shadow: var(--shadow-light);
+      backdrop-filter: blur(6px);
+    }
+
+    .tab-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 8px;
+    }
+
+    .tab-btn {
+      width: 100%;
+      border: 1px solid #c9d8dc;
+      background: linear-gradient(180deg, #ffffff, #f1f7f7);
+      color: #173347;
+      border-radius: 999px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.82rem;
+      text-align: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      transform: translateY(-1px);
+      border-color: #9eb8df;
+      box-shadow: 0 8px 20px rgba(8, 21, 37, 0.08);
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      border-color: transparent;
+      background: linear-gradient(120deg, #1768c2, #007f78);
+      box-shadow: 0 8px 20px rgba(8, 21, 37, 0.16);
+    }
+
+    .panel-wrap {
+      margin-top: 12px;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .panel {
+      display: none;
+      background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
+      border: 1px solid #d5e0e1;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-light);
+      padding: 18px;
+      animation: reveal 0.3s ease;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    @keyframes reveal {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes entrance {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .panel h2 {
+      margin: 0;
+      font-family: 'Urbanist', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #14344b;
+      letter-spacing: 0.01em;
+    }
+
+    .subtext {
+      margin: 8px 0 14px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      border-radius: 999px;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      font-weight: 700;
+      padding: 6px 10px;
+      border: 1px solid transparent;
+    }
+
+    .status-pill::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: currentColor;
+      opacity: 0.9;
+    }
+
+    .status-pending {
+      background: #fff7e6;
+      color: var(--amber);
+      border-color: #f1dfbb;
+    }
+
+    .status-resolved {
+      background: #e6f8f2;
+      color: var(--ok);
+      border-color: #bee7d8;
+    }
+
+    .status-escalated {
+      background: #fdeceb;
+      color: var(--rose);
+      border-color: #efc4c4;
+    }
+
+    .status-waiting-for-client {
+      background: #eaf2ff;
+      color: var(--brand);
+      border-color: #c8d9f8;
+    }
+
+    .active-card {
+      border: 1px solid #b9d8d4;
+      border-radius: var(--radius-lg);
+      background:
+        linear-gradient(180deg, #f2fbfa 0%, #ffffff 46%),
+        radial-gradient(circle at 92% -4%, rgba(0, 127, 120, 0.18), transparent 32%);
+      padding: 16px;
+      box-shadow: var(--shadow-light);
+    }
+
+    .active-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .dispute-id {
+      font-family: 'Urbanist', sans-serif;
+      font-size: 1.12rem;
+      letter-spacing: 0.01em;
+    }
+
+    .active-grid {
+      margin-top: 14px;
+      display: grid;
+      gap: 11px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .field {
+      background: #f8fbfb;
+      border: 1px solid #d7e3e5;
+      border-radius: var(--radius-md);
+      padding: 10px;
+      min-height: 74px;
+    }
+
+    .field small {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.7rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #61768f;
+      font-weight: 700;
+    }
+
+    .field span {
+      font-size: 0.9rem;
+      line-height: 1.4;
+      color: #14314f;
+      word-break: break-word;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+      min-height: 88px;
+      background: #ffffff;
+    }
+
+    .no-pending {
+      border: 1px dashed #b6cae6;
+      border-radius: var(--radius-md);
+      padding: 20px;
+      color: #4a627d;
+      background: #f6fbff;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      margin-bottom: 10px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.8rem;
+      color: #28415f;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      font-weight: 700;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      font: inherit;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border-radius: 11px;
+      border: 1px solid #bfd1d4;
+      padding: 10px 12px;
+      color: #12314f;
+      background: #ffffff;
+      transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #3f9d9a;
+      box-shadow: 0 0 0 4px rgba(0, 127, 120, 0.12);
+    }
+
+    input[readonly] {
+      background: #eef5ff;
+      color: #415d79;
+      font-weight: 700;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 105px;
+    }
+
+    .action-row {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      border: 0;
+      border-radius: 11px;
+      padding: 11px 16px;
+      background: linear-gradient(130deg, #1768c2 0%, #007f78 100%);
+      color: #fff;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      box-shadow: 0 10px 22px rgba(8, 21, 37, 0.12);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 24px rgba(8, 21, 37, 0.16);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .msg {
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .msg.ok {
+      color: #056344;
+    }
+
+    .msg.error {
+      color: #982f2f;
+    }
+
+    .table-wrap {
+      border: 1px solid #d6e2f3;
+      border-radius: var(--radius-md);
+      overflow: auto;
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      min-width: 860px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid #edf3fb;
+      vertical-align: top;
+      line-height: 1.35;
+    }
+
+    th {
+      background: linear-gradient(180deg, #f1f8f7, #e7f1f2);
+      color: #49636c;
+      font-size: 0.74rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      font-weight: 700;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    td {
+      font-size: 0.87rem;
+      color: #173553;
+    }
+
+    .metric:nth-child(1) {
+      --metric-accent: linear-gradient(90deg, #1768c2, #5f8ed0);
+    }
+
+    .metric:nth-child(2) {
+      --metric-accent: linear-gradient(90deg, #e5a11b, #f2c35a);
+    }
+
+    .metric:nth-child(3) {
+      --metric-accent: linear-gradient(90deg, #009a82, #5bc9a8);
+    }
+
+    .metric:nth-child(4) {
+      --metric-accent: linear-gradient(90deg, #ad3b43, #e78378);
+    }
+
+    .metric:nth-child(5) {
+      --metric-accent: linear-gradient(90deg, #6655b8, #a89be2);
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    tbody tr {
+      transition: background 0.18s ease;
+    }
+
+    tbody tr:hover {
+      background: #f3f9f8;
+    }
+
+    .mini {
+      display: block;
+      margin-top: 3px;
+      font-size: 0.78rem;
+      color: #58708d;
+    }
+
+    @media (max-width: 960px) {
+      .container {
+        width: min(1240px, calc(100% - 20px));
+      }
+
+      .hero {
+        padding: 18px;
+      }
+
+      .workspace {
+        padding: 10px;
+      }
+
+      .panel {
+        padding: 14px;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .hero {
+        border-radius: 18px;
+      }
+
+      .hero-clock {
+        width: 100%;
+      }
+
+      .queue-control,
+      .admin-actions {
+        width: 100%;
+      }
+
+      .queue-control {
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .queue-control label:not(.switch) {
+        flex: 1;
+      }
+
+      .admin-actions .admin-action {
+        flex: 1 1 100%;
+      }
+
+      .admin-message {
+        width: 100%;
+      }
+
+      .tab-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .tab-btn {
+        border-radius: 12px;
+      }
+
+      .metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .metric-value {
+        font-size: 1.45rem;
+      }
+
+      .active-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .full-width {
+        grid-column: auto;
+      }
+
+      .panel h2 {
+        font-size: 1.05rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header class="hero">
+      <div class="hero-top">
+        <div>
+          <h1>Dispute Resolution State Machine</h1>
+          <p>Azure-ready operations console for single-item pending processing, FIFO queue advancement, and status-specific settlement views.</p>
+          <div class="hero-badges">
+            <span class="chip">App Service Compatible</span>
+            <span class="chip">RPA + Human Workflow</span>
+            <span class="chip">FIFO Pending Queue</span>
+          </div>
+          <div class="queue-control">
+            <label class="switch" for="timed-queue-toggle">
+              <input id="timed-queue-toggle" type="checkbox">
+              <span class="switch-track"></span>
+            </label>
+            <label for="timed-queue-toggle">Release one dispute every 5 minutes</label>
+            <span class="queue-timer" id="queue-timer">Off</span>
+          </div>
+          <div class="admin-actions">
+            <label class="switch" for="random-dispute-toggle">
+              <input id="random-dispute-toggle" type="checkbox">
+              <span class="switch-track"></span>
+            </label>
+            <label for="random-dispute-toggle" style="margin:0;color:#fff;font-size:.76rem;text-transform:none;letter-spacing:0;">Send one random dispute now</label>
+            <button class="admin-action" id="reset-disputes" type="button">Reset all disputes to default</button>
+            <span class="admin-message" id="admin-message"></span>
+          </div>
+        </div>
+        <div class="hero-clock" id="hero-clock"></div>
+      </div>
+    </header>
+
+    <section class="metrics">
+      <article class="metric">
+        <div class="metric-label">Total Disputes</div>
+        <div class="metric-value" id="metric-total">0</div>
+      </article>
+      <article class="metric">
+        <div class="metric-label">Pending</div>
+        <div class="metric-value" id="metric-pending">0</div>
+      </article>
+      <article class="metric">
+        <div class="metric-label">Resolved</div>
+        <div class="metric-value" id="metric-resolved">0</div>
+      </article>
+      <article class="metric">
+        <div class="metric-label">Escalated</div>
+        <div class="metric-value" id="metric-escalated">0</div>
+      </article>
+      <article class="metric">
+        <div class="metric-label">Waiting For Client</div>
+        <div class="metric-value" id="metric-waiting">0</div>
+      </article>
+    </section>
+
+    <main class="workspace">
+      <nav class="tab-strip" id="tab-nav">
+        <button class="tab-btn" data-panel="pending">1) Active Pending Queue</button>
+        <button class="tab-btn" data-panel="resolution">2) Resolution Form</button>
+        <button class="tab-btn" data-panel="resolved">3) Resolved History</button>
+        <button class="tab-btn" data-panel="escalated">4) Escalated Queue - HITL</button>
+        <button class="tab-btn" data-panel="waiting">5) Awaiting Client Response</button>
+      </nav>
+
+      <div class="panel-wrap">
+        <section class="panel" id="panel-pending">
+          <h2>Current Active Pending Dispute</h2>
+          <p class="subtext">Fetched from GET /api/disputes with strict FIFO sorting by timestamp.</p>
+          <div id="active-container"></div>
+        </section>
+
+        <section class="panel" id="panel-resolution">
+          <h2>Dispute Resolution Form</h2>
+          <p class="subtext">Submit status, eligible amount, and audit notes to move this record out of pending and expose the next queue item.</p>
+          <form id="resolution-form">
+            <div class="form-grid">
+              <div>
+                <label for="disputeId">Dispute ID</label>
+                <input id="disputeId" name="disputeId" type="text" readonly>
+              </div>
+              <div>
+                <label for="status">Resolution Status</label>
+                <select id="status" name="status" required>
+                  <option value="RESOLVED">RESOLVED</option>
+                  <option value="ESCALATED">ESCALATED</option>
+                  <option value="WAITING_FOR_CLIENT">WAITING_FOR_CLIENT</option>
+                </select>
+              </div>
+              <div>
+                <label for="eligibleAmount">Eligible / Approved Amount</label>
+                <input id="eligibleAmount" name="eligibleAmount" type="number" min="0" step="0.01" placeholder="e.g. 1250">
+              </div>
+            </div>
+            <div>
+              <label for="resolutionSummary">Resolution Summary / Audit Notes</label>
+              <textarea id="resolutionSummary" name="resolutionSummary" required placeholder="Capture policy rationale, evidence checks, and settlement rationale."></textarea>
+            </div>
+            <div class="action-row">
+              <button class="btn-primary" type="submit" id="submit-resolution">Submit Resolution</button>
+              <span id="form-message" class="msg"></span>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel" id="panel-resolved">
+          <h2>Resolved History</h2>
+          <p class="subtext">All rows where status = RESOLVED.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Dispute</th>
+                  <th>Partner</th>
+                  <th>Category</th>
+                  <th>Claimed</th>
+                  <th>Eligible</th>
+                  <th>Resolved At</th>
+                  <th>Summary</th>
+                </tr>
+              </thead>
+              <tbody id="resolved-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-escalated">
+          <h2>Escalated Queue - HITL</h2>
+          <p class="subtext">All rows where status = ESCALATED.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Dispute</th>
+                  <th>Partner</th>
+                  <th>Category</th>
+                  <th>Claimed</th>
+                  <th>Eligible</th>
+                  <th>Resolved At</th>
+                  <th>Summary</th>
+                </tr>
+              </thead>
+              <tbody id="escalated-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-waiting">
+          <h2>Awaiting Client Response</h2>
+          <p class="subtext">All rows where status = WAITING_FOR_CLIENT.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Dispute</th>
+                  <th>Partner</th>
+                  <th>Category</th>
+                  <th>Claimed</th>
+                  <th>Eligible</th>
+                  <th>Resolved At</th>
+                  <th>Summary</th>
+                </tr>
+              </thead>
+              <tbody id="waiting-body"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const routeToPanel = {
+      '/': 'pending',
+      '/dispute-resolution-form': 'resolution',
+      '/resolved': 'resolved',
+      '/escalated': 'escalated',
+      '/waiting-for-client': 'waiting'
+    };
+
+    const panelToRoute = {
+      pending: '/',
+      resolution: '/dispute-resolution-form',
+      resolved: '/resolved',
+      escalated: '/escalated',
+      waiting: '/waiting-for-client'
+    };
+
+    const statusClass = {
+      PENDING: 'status-pending',
+      RESOLVED: 'status-resolved',
+      ESCALATED: 'status-escalated',
+      WAITING_FOR_CLIENT: 'status-waiting-for-client'
+    };
+
+    const state = {
+      activeDispute: null,
+      summary: null,
+      resolved: [],
+      escalated: [],
+      waiting: [],
+      timedQueueEnabled: localStorage.getItem('timed-queue-enabled') === 'true',
+      nextQueueRefreshAt: null
+    };
+
+    const QUEUE_INTERVAL_MS = 5 * 60 * 1000;
+    let queueTimer = null;
+
+    const byId = (id) => document.getElementById(id);
+
+    function formatMoney(value) {
+      if (typeof value !== 'number') return '-';
+      return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        maximumFractionDigits: 2
+      }).format(value);
+    }
+
+    function formatDate(value) {
+      if (!value) return '-';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return value;
+      return date.toLocaleString('en-IN');
+    }
+
+    function setTab(panel, updateHistory = true) {
+      document.querySelectorAll('.tab-btn').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.panel === panel);
+      });
+
+      document.querySelectorAll('.panel').forEach((section) => {
+        section.classList.remove('active');
+      });
+
+      const target = byId(`panel-${panel}`);
+      if (target) target.classList.add('active');
+
+      if (updateHistory) {
+        const route = panelToRoute[panel] || '/';
+        if (window.location.pathname !== route) {
+          history.replaceState({}, '', route);
+        }
+      }
+    }
+
+    function renderActiveDispute() {
+      const root = byId('active-container');
+      const active = state.activeDispute;
+
+      if (!active) {
+        root.innerHTML = '<div class="no-pending">No pending disputes in queue. The active endpoint currently returns no content.</div>';
+        byId('disputeId').value = '';
+        byId('submit-resolution').disabled = true;
+        return;
+      }
+
+      byId('disputeId').value = active.disputeId;
+      byId('submit-resolution').disabled = false;
+
+      root.innerHTML = `
+        <div class="active-card">
+          <div class="active-top">
+            <strong class="dispute-id">${active.disputeId}</strong>
+            <span class="status-pill ${statusClass[active.status] || 'status-pending'}">${active.status}</span>
+          </div>
+          <div class="active-grid">
+            <div class="field"><small>AWB Number</small><span>${active.awbNumber}</span></div>
+            <div class="field"><small>Seller/Courier</small><span>${active.sellerOrCourierName}</span></div>
+            <div class="field"><small>Stakeholder Type</small><span>${active.stakeholderType}</span></div>
+            <div class="field"><small>Category</small><span>${active.disputeCategory}</span></div>
+            <div class="field"><small>Claimed Amount</small><span>${formatMoney(active.claimedAmount)}</span></div>
+            <div class="field"><small>Claimed Weight</small><span>${active.claimedWeightKg} kg</span></div>
+            <div class="field"><small>Billed Weight</small><span>${active.billedWeightKg} kg</span></div>
+            <div class="field"><small>Incident Date</small><span>${active.incidentDate}</span></div>
+            <div class="field"><small>Recipient Email</small><span>${active.recipientEmail}</span></div>
+            <div class="field"><small>Queue Timestamp</small><span>${formatDate(active.timestamp)}</span></div>
+            <div class="field full-width"><small>Dispute Remarks</small><span>${active.disputeRemarks}</span></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSummary() {
+      const summary = state.summary || {
+        total: 0,
+        pending: 0,
+        resolved: 0,
+        escalated: 0,
+        waitingForClient: 0
+      };
+
+      byId('metric-total').textContent = String(summary.total || 0);
+      byId('metric-pending').textContent = String(summary.pending || 0);
+      byId('metric-resolved').textContent = String(summary.resolved || 0);
+      byId('metric-escalated').textContent = String(summary.escalated || 0);
+      byId('metric-waiting').textContent = String(summary.waitingForClient || 0);
+    }
+
+    function tableRow(item) {
+      return `
+        <tr>
+          <td>
+            <strong>${item.disputeId}</strong>
+            <span class="mini">${item.awbNumber}</span>
+          </td>
+          <td>
+            ${item.sellerOrCourierName}
+            <span class="mini">${item.stakeholderType}</span>
+          </td>
+          <td>${item.disputeCategory}</td>
+          <td>${formatMoney(item.claimedAmount)}</td>
+          <td>${formatMoney(item.eligibleAmount)}</td>
+          <td>${formatDate(item.resolvedAt)}</td>
+          <td>${item.resolutionSummary || '-'}</td>
+        </tr>
+      `;
+    }
+
+    function renderList(items, bodyId) {
+      const body = byId(bodyId);
+      if (!items.length) {
+        body.innerHTML = '<tr><td colspan="7">No records found.</td></tr>';
+        return;
+      }
+      body.innerHTML = items.map(tableRow).join('');
+    }
+
+    async function fetchActiveDispute() {
+      const response = await fetch('/disputes');
+      if (!response.ok) throw new Error('Failed to load active pending dispute from /disputes.');
+      const body = await response.json();
+      return body.status === 'QUEUE_EMPTY' ? null : body;
+    }
+
+    async function fetchJson(url) {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to load ${url}`);
+      }
+      return response.json();
+    }
+
+    async function refreshDashboard() {
+      const [activeDispute, summary, resolved, escalated, waiting] = await Promise.all([
+        fetchActiveDispute(),
+        fetchJson('/api/disputes/summary'),
+        fetchJson('/api/disputes/resolved'),
+        fetchJson('/api/disputes/escalated'),
+        fetchJson('/api/disputes/waiting-for-client')
+      ]);
+
+      state.activeDispute = activeDispute;
+      state.summary = summary;
+      state.resolved = resolved;
+      state.escalated = escalated;
+      state.waiting = waiting;
+
+      renderSummary();
+      renderActiveDispute();
+      renderList(state.resolved, 'resolved-body');
+      renderList(state.escalated, 'escalated-body');
+      renderList(state.waiting, 'waiting-body');
+    }
+
+    function updateQueueTimer() {
+      const node = byId('queue-timer');
+      if (!state.timedQueueEnabled || !state.nextQueueRefreshAt) {
+        node.textContent = 'Off';
+        return;
+      }
+
+      const remaining = Math.max(0, state.nextQueueRefreshAt - Date.now());
+      const minutes = Math.floor(remaining / 60000);
+      const seconds = Math.floor((remaining % 60000) / 1000);
+      node.textContent = `Next check ${minutes}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function stopTimedQueue() {
+      clearTimeout(queueTimer);
+      queueTimer = null;
+      state.nextQueueRefreshAt = null;
+      updateQueueTimer();
+    }
+
+    function startTimedQueue() {
+      stopTimedQueue();
+      state.timedQueueEnabled = true;
+      state.nextQueueRefreshAt = Date.now() + QUEUE_INTERVAL_MS;
+      updateQueueTimer();
+
+      queueTimer = setTimeout(async () => {
+        try {
+          await refreshDashboard();
+        } catch (error) {
+          setFormMessage(`Timed queue refresh failed: ${error.message}`, true);
+        } finally {
+          if (state.timedQueueEnabled) startTimedQueue();
+        }
+      }, QUEUE_INTERVAL_MS);
+    }
+
+    function bindTimedQueue() {
+      const toggle = byId('timed-queue-toggle');
+      toggle.checked = state.timedQueueEnabled;
+      toggle.addEventListener('change', () => {
+        state.timedQueueEnabled = toggle.checked;
+        localStorage.setItem('timed-queue-enabled', String(toggle.checked));
+        if (toggle.checked) {
+          startTimedQueue();
+        } else {
+          stopTimedQueue();
+        }
+      });
+
+      setInterval(updateQueueTimer, 1000);
+      if (state.timedQueueEnabled) startTimedQueue();
+    }
+
+    async function sendRandomDispute() {
+      const toggle = byId('random-dispute-toggle');
+      const message = byId('admin-message');
+      toggle.disabled = true;
+
+      try {
+        const response = await fetch('/api/disputes/random', { method: 'POST' });
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(body.message || 'Could not add random dispute.');
+        }
+        message.textContent = `${body.createdDispute.disputeId} added to pending queue.`;
+        await refreshDashboard();
+      } catch (error) {
+        message.textContent = error.message;
+      } finally {
+        toggle.checked = false;
+        toggle.disabled = false;
+      }
+    }
+
+    async function resetDisputes() {
+      if (!window.confirm('Clear all current changes and restore the default dispute dataset?')) return;
+
+      const button = byId('reset-disputes');
+      const message = byId('admin-message');
+      button.disabled = true;
+
+      try {
+        const response = await fetch('/api/disputes/reset', { method: 'POST' });
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(body.message || 'Could not reset disputes.');
+        }
+        message.textContent = 'Default dispute dataset restored.';
+        await refreshDashboard();
+        if (state.timedQueueEnabled) startTimedQueue();
+      } catch (error) {
+        message.textContent = error.message;
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    function bindAdminControls() {
+      byId('random-dispute-toggle').addEventListener('change', (event) => {
+        if (event.target.checked) sendRandomDispute();
+      });
+      byId('reset-disputes').addEventListener('click', resetDisputes);
+    }
+
+    function setFormMessage(message, isError = false) {
+      const node = byId('form-message');
+      node.textContent = message;
+      node.className = `msg ${isError ? 'error' : 'ok'}`;
+    }
+
+    function bindTabs() {
+      document.querySelectorAll('.tab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          setTab(btn.dataset.panel, true);
+        });
+      });
+    }
+
+    async function submitResolution(event) {
+      event.preventDefault();
+      const disputeId = byId('disputeId').value.trim();
+
+      if (!disputeId) {
+        setFormMessage('No active pending dispute available to resolve.', true);
+        return;
+      }
+
+      const status = byId('status').value;
+      const resolutionSummary = byId('resolutionSummary').value.trim();
+      const eligibleRaw = byId('eligibleAmount').value;
+
+      if (!resolutionSummary) {
+        setFormMessage('Resolution summary is required.', true);
+        return;
+      }
+
+      const payload = {
+        status,
+        resolutionSummary,
+        eligibleAmount: eligibleRaw === '' ? undefined : Number(eligibleRaw)
+      };
+
+      try {
+        byId('submit-resolution').disabled = true;
+
+        const response = await fetch('/api/resolve', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            disputeId,
+            resolutionStatus: payload.status,
+            eligibleAmount: payload.eligibleAmount,
+            resolutionSummary: payload.resolutionSummary
+          })
+        });
+
+        const body = response.status === 204 ? null : await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(body && body.message ? body.message : 'Failed to update dispute.');
+        }
+
+        byId('resolutionSummary').value = '';
+        byId('eligibleAmount').value = '';
+        setFormMessage('Resolution submitted. Queue advanced to the next pending dispute.');
+
+        await refreshDashboard();
+        if (state.timedQueueEnabled) startTimedQueue();
+      } catch (error) {
+        setFormMessage(error.message, true);
+      } finally {
+        byId('submit-resolution').disabled = false;
+      }
+    }
+
+    function runClock() {
+      const node = byId('hero-clock');
+      if (!node) return;
+
+      const tick = () => {
+        node.textContent = new Date().toLocaleTimeString('en-IN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+      };
+
+      tick();
+      setInterval(tick, 1000);
+    }
+
+    async function init() {
+      bindTabs();
+      runClock();
+      bindTimedQueue();
+      bindAdminControls();
+      byId('resolution-form').addEventListener('submit', submitResolution);
+
+      const initialPanel = routeToPanel[window.location.pathname] || 'pending';
+      setTab(initialPanel, false);
+
+      try {
+        await refreshDashboard();
+      } catch (error) {
+        setFormMessage(`Startup error: ${error.message}`, true);
+      }
+    }
+
+    init();
+  </script>
+</body>
+
+</html>
