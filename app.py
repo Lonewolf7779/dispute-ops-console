@@ -127,7 +127,13 @@ def oldest_pending(records):
         if record.get("status") == STATUS_PENDING
         and float(record.get("availableAt", 0)) <= now
     ]
-    pending.sort(key=lambda item: parse_iso_time(item.get("timestamp", "")))
+    # A manually dispatched random dispute is intentionally shown next. This
+    # makes the admin "Send random dispute now" action immediately visible at
+    # /disputes without permanently changing the ordinary FIFO order.
+    pending.sort(key=lambda item: (
+        0 if item.get("priorityDispatch") else 1,
+        parse_iso_time(item.get("timestamp", "")),
+    ))
     return pending[0] if pending else None
 
 
@@ -257,8 +263,13 @@ def add_random_dispute():
         "timestamp": now.isoformat(timespec="milliseconds") + "Z",
     }
 
-    pending_count = len([item for item in records if item.get("status") == STATUS_PENDING])
-    random_dispute["availableAt"] = datetime.utcnow().timestamp() + pending_count * RELEASE_INTERVAL_SECONDS
+    # Only the latest manual dispatch receives the temporary priority flag.
+    # Earlier random items rejoin the regular FIFO queue.
+    for record in records:
+        record.pop("priorityDispatch", None)
+
+    random_dispute["availableAt"] = datetime.utcnow().timestamp()
+    random_dispute["priorityDispatch"] = True
     records.append(random_dispute)
     persist_store()
     return jsonify({

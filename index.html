@@ -1231,7 +1231,7 @@
         if (!response.ok) {
           throw new Error(body.message || 'Could not add random dispute.');
         }
-        message.textContent = `${body.createdDispute.disputeId} added to pending queue.`;
+        message.textContent = `${body.createdDispute.disputeId} dispatched and now active.`;
         await refreshDashboard();
       } catch (error) {
         message.textContent = error.message;
