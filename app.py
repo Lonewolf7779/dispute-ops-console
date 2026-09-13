@@ -364,7 +364,7 @@ def add_random_dispute():
             "claimedAmount": 850,
             "claimedWeightKg": 0.6,
             "billedWeightKg": 2.1,
-            "disputeRemarks": "Random test claim: billed weight exceeds the origin scan.",
+            "disputeRemarks": "Apparel consignment (dead weight 0.60 kg on merchant scale) was billed as 2.10 kg volumetric weight. Requesting ₹850 excess freight reversal. Weighing slip attached.",
         },
         {
             "sellerOrCourierName": "BlueDart Cargo",
@@ -373,7 +373,7 @@ def add_random_dispute():
             "claimedAmount": 2400,
             "claimedWeightKg": 1.8,
             "billedWeightKg": 1.8,
-            "disputeRemarks": "Random test claim: manifest upload was delayed by a platform outage.",
+            "disputeRemarks": "SLA penalty waiver requested. Consignment manifest delayed due to documented cloud network gateway outage during peak manifest window. IT bulletin attached.",
         },
         {
             "sellerOrCourierName": "Northstar Homeware Pvt Ltd.",
@@ -382,7 +382,7 @@ def add_random_dispute():
             "claimedAmount": 5200,
             "claimedWeightKg": 12.0,
             "billedWeightKg": 12.0,
-            "disputeRemarks": "Random test claim: received unit count differs from the handover manifest.",
+            "disputeRemarks": "Inwarding dock receipt confirms 40 units received, but GRN inward count recorded 34 units (shortage of 6 units valued at ₹5,200). Receiving supervisor sign-off attached.",
         },
     ]
     template = random.choice(templates)
