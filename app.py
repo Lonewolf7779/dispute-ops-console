@@ -1,5 +1,6 @@
 import json
 import random
+import re
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
@@ -26,6 +27,36 @@ RESOLUTION_STATUSES = {
     STATUS_RESOLVED,
     STATUS_ESCALATED,
     STATUS_WAITING_FOR_CLIENT,
+}
+
+STATUS_SYNONYMS = {
+    "RESOLVED": STATUS_RESOLVED,
+    "RESOLVE": STATUS_RESOLVED,
+    "RESOLVING": STATUS_RESOLVED,
+    "COMPLETED": STATUS_RESOLVED,
+    "COMPLETE": STATUS_RESOLVED,
+    "APPROVED": STATUS_RESOLVED,
+    "APPROVE": STATUS_RESOLVED,
+    "SETTLED": STATUS_RESOLVED,
+    "SUCCESS": STATUS_RESOLVED,
+
+    "ESCALATED": STATUS_ESCALATED,
+    "ESCALATE": STATUS_ESCALATED,
+    "ESCALATION": STATUS_ESCALATED,
+    "HITL": STATUS_ESCALATED,
+    "HUMAN_REVIEW": STATUS_ESCALATED,
+    "REJECTED": STATUS_ESCALATED,
+    "REJECT": STATUS_ESCALATED,
+
+    "WAITING_FOR_CLIENT": STATUS_WAITING_FOR_CLIENT,
+    "WAITINGFORCLIENT": STATUS_WAITING_FOR_CLIENT,
+    "WAITING FOR CLIENT": STATUS_WAITING_FOR_CLIENT,
+    "WAITING_FOR_SELLER": STATUS_WAITING_FOR_CLIENT,
+    "WAITING_FOR_COURIER": STATUS_WAITING_FOR_CLIENT,
+    "WAITING": STATUS_WAITING_FOR_CLIENT,
+    "PENDING_CLIENT": STATUS_WAITING_FOR_CLIENT,
+    "AWAITING_CLIENT": STATUS_WAITING_FOR_CLIENT,
+    "ON_HOLD": STATUS_WAITING_FOR_CLIENT,
 }
 
 app = Flask(__name__)
@@ -81,6 +112,111 @@ def load_store():
 
 def persist_store():
     write_disputes(disputes_store)
+
+
+def normalize_resolution_status(status_raw):
+    if not status_raw:
+        return None
+    clean = str(status_raw).strip().upper().replace("-", "_")
+    if clean in STATUS_SYNONYMS:
+        return STATUS_SYNONYMS[clean]
+    clean_no_underscore = clean.replace("_", " ")
+    if clean_no_underscore in STATUS_SYNONYMS:
+        return STATUS_SYNONYMS[clean_no_underscore]
+    return None
+
+
+def sanitize_amount(value):
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    val_str = str(value).strip()
+    if not val_str or val_str.lower() in ("null", "none", "n/a", "na", "undefined", "nil", "-"):
+        return None
+    # Strip currency signs, commas, and formatting while keeping digits, negative sign, and decimal
+    cleaned = re.sub(r"[^\d.-]", "", val_str)
+    try:
+        return float(cleaned)
+    except ValueError:
+        return None
+
+
+def parse_flexible_json_payload():
+    # 1. Standard Flask JSON parsing
+    data = request.get_json(silent=True)
+    if isinstance(data, dict):
+        return data
+
+    # 2. Form or query parameters
+    if request.form:
+        return dict(request.form)
+
+    # 3. Handle broken/malformed JSON strings from RPA variable interpolations
+    # e.g. "eligibleAmount": , or unquoted empty values
+    try:
+        raw_bytes = request.get_data()
+        if raw_bytes:
+            raw_text = raw_bytes.decode("utf-8", errors="ignore").strip()
+            if raw_text:
+                # Replace empty values before commas or braces with null
+                repaired = re.sub(r':\s*,', ': null,', raw_text)
+                repaired = re.sub(r':\s*}', ': null}', repaired)
+                repaired = re.sub(r':\s*]', ': null]', repaired)
+                parsed = json.loads(repaired)
+                if isinstance(parsed, dict):
+                    return parsed
+    except Exception:
+        pass
+
+    return {}
+
+
+def extract_dispute_fields(payload):
+    dispute_id = (
+        payload.get("disputeId")
+        or payload.get("dispute_id")
+        or payload.get("disputeID")
+        or payload.get("id")
+        or payload.get("awbNumber")
+        or payload.get("awb_number")
+    )
+    if dispute_id is not None:
+        dispute_id = str(dispute_id).strip()
+
+    status_raw = (
+        payload.get("resolutionStatus")
+        or payload.get("resolution_status")
+        or payload.get("status")
+        or payload.get("resolution")
+    )
+    resolution_status = normalize_resolution_status(status_raw)
+
+    amount_raw = (
+        payload.get("eligibleAmount")
+        or payload.get("eligible_amount")
+        or payload.get("amount")
+        or payload.get("approvedAmount")
+        or payload.get("approved_amount")
+        or payload.get("settlementAmount")
+    )
+    eligible_amount = sanitize_amount(amount_raw)
+
+    summary_raw = (
+        payload.get("resolutionSummary")
+        or payload.get("resolution_summary")
+        or payload.get("summary")
+        or payload.get("remarks")
+        or payload.get("notes")
+        or payload.get("auditRemarks")
+        or payload.get("comment")
+    )
+    if summary_raw is not None:
+        resolution_summary = str(summary_raw).strip()
+    else:
+        resolution_summary = ""
+
+    return dispute_id, resolution_status, eligible_amount, resolution_summary
 
 
 def validate_dispute_schema(dispute):
@@ -329,24 +465,20 @@ def get_summary():
 
 @app.put("/api/disputes/<dispute_id>/status")
 def resolve_dispute(dispute_id):
-    payload = request.get_json(silent=True) or {}
-    status = payload.get("status")
-    resolution_summary = payload.get("resolutionSummary")
-    eligible_amount = payload.get("eligibleAmount")
+    payload = parse_flexible_json_payload()
+    _, status, eligible_amount, resolution_summary = extract_dispute_fields(payload)
 
-    if status not in RESOLUTION_STATUSES:
+    if not status:
+        status_raw = payload.get("status") or payload.get("resolutionStatus")
         return jsonify({
-            "message": "Invalid resolution status. Use RESOLVED, ESCALATED, or WAITING_FOR_CLIENT."
+            "message": f"Invalid resolution status '{status_raw}'. Use RESOLVED, ESCALATED, or WAITING_FOR_CLIENT."
         }), 400
 
-    if not isinstance(resolution_summary, str) or not resolution_summary.strip():
-        return jsonify({"message": "resolutionSummary is required."}), 400
-
-    if eligible_amount is not None and not isinstance(eligible_amount, (int, float)):
-        return jsonify({"message": "eligibleAmount must be a number when provided."}), 400
+    if not resolution_summary:
+        resolution_summary = f"Dispute resolved via console."
 
     records = disputes_store
-    index = next((i for i, item in enumerate(records) if item.get("disputeId") == dispute_id), -1)
+    index = next((i for i, item in enumerate(records) if item.get("disputeId") == dispute_id or item.get("awbNumber") == dispute_id), -1)
 
     if index == -1:
         return jsonify({"message": "Dispute not found."}), 404
@@ -358,8 +490,8 @@ def resolve_dispute(dispute_id):
 
     updated = deepcopy(records[index])
     updated["status"] = status
-    updated["resolutionSummary"] = resolution_summary.strip()
-    updated["eligibleAmount"] = float(eligible_amount) if eligible_amount is not None else None
+    updated["resolutionSummary"] = resolution_summary
+    updated["eligibleAmount"] = eligible_amount
     updated["resolvedAt"] = datetime.utcnow().isoformat(timespec="seconds") + "Z"
 
     schema_error = validate_dispute_schema(updated)
@@ -380,44 +512,58 @@ def resolve_dispute(dispute_id):
 
 @app.post("/api/resolve")
 def resolve_dispute_for_bot():
-    payload = request.get_json(silent=True) or {}
-    dispute_id = payload.get("disputeId")
-    resolution_status = payload.get("resolutionStatus")
+    payload = parse_flexible_json_payload()
+    dispute_id, resolution_status, eligible_amount, resolution_summary = extract_dispute_fields(payload)
 
     if not dispute_id:
-        return jsonify({"success": False, "message": "disputeId is required."}), 400
+        # If dispute_id is missing, auto-target the current oldest pending dispute in queue
+        active = oldest_pending(disputes_store)
+        if active:
+            dispute_id = active.get("disputeId")
+        else:
+            return jsonify({
+                "success": False,
+                "message": "disputeId is required and no active pending dispute was found in queue."
+            }), 400
 
-    if resolution_status not in RESOLUTION_STATUSES:
-        return jsonify({
-            "success": False,
-            "message": "resolutionStatus must be RESOLVED, ESCALATED, or WAITING_FOR_CLIENT.",
-        }), 400
+    if not resolution_status:
+        # Safe default to RESOLVED
+        resolution_status = STATUS_RESOLVED
 
-    resolution_summary = payload.get("resolutionSummary")
-    if not isinstance(resolution_summary, str) or not resolution_summary.strip():
-        return jsonify({"success": False, "message": "resolutionSummary is required."}), 400
+    if not resolution_summary:
+        resolution_summary = f"Dispute processed with status {resolution_status} via automated task."
 
     index = next((i for i, item in enumerate(disputes_store) if item.get("disputeId") == dispute_id), -1)
     if index == -1:
-        return jsonify({"success": False, "message": "Dispute not found."}), 404
-    if disputes_store[index].get("status") != STATUS_PENDING:
-        return jsonify({"success": False, "message": "Only PENDING disputes can be resolved."}), 409
+        # Also check if passed dispute_id was an AWB number
+        index = next((i for i, item in enumerate(disputes_store) if item.get("awbNumber") == dispute_id), -1)
 
-    eligible_amount = payload.get("eligibleAmount")
-    if eligible_amount is not None and not isinstance(eligible_amount, (int, float)):
-        return jsonify({"success": False, "message": "eligibleAmount must be numeric."}), 400
+    if index == -1:
+        return jsonify({
+            "success": False,
+            "message": f"Dispute '{dispute_id}' not found."
+        }), 404
+
+    if disputes_store[index].get("status") != STATUS_PENDING:
+        return jsonify({
+            "success": False,
+            "message": f"Dispute '{dispute_id}' is already {disputes_store[index].get('status')} and cannot be resolved."
+        }), 409
 
     disputes_store[index].update({
         "status": resolution_status,
         "eligibleAmount": eligible_amount,
-        "resolutionSummary": resolution_summary.strip(),
+        "resolutionSummary": resolution_summary,
         "resolvedAt": iso_now(),
     })
-    unlock_next_pending(disputes_store)
+    next_pending = unlock_next_pending(disputes_store)
     persist_store()
+
     return jsonify({
         "success": True,
         "message": f"Dispute {dispute_id} successfully resolved and updated.",
+        "updatedDispute": disputes_store[index],
+        "nextPendingDispute": next_pending,
         "nextAvailableInSeconds": next_release_seconds(disputes_store),
     })
 
