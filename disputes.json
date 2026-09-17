@@ -10,12 +10,12 @@
     "claimedWeightKg": 1.2,
     "billedWeightKg": 1.2,
     "disputeRemarks": "SLA breach penalty waiver requested for Zone-B outbound consignment. Manifest upload failed due to verified platform API gateway downtime between 02:00-04:30 IST on 2026-07-21. Server maintenance logs and incident ticket #INC-88912 attached.",
-    "recipientEmail": "sntoshprajapati163@gmail.com",
+    "recipientEmail": "evaluator@demo-evaluation.com",
     "status": "PENDING",
     "resolutionSummary": null,
     "eligibleAmount": null,
     "timestamp": "2026-08-20T04:33:02.557Z",
-    "availableAt": 1789273040.953725
+    "availableAt": 1789623398.731825
   },
   {
     "disputeId": "DISP-88224",
@@ -28,12 +28,12 @@
     "claimedWeightKg": 0.45,
     "billedWeightKg": 2.3,
     "disputeRemarks": "Apparel shipment (dead weight 0.45 kg verified on merchant weighing receipt) was incorrectly invoiced at 2.30 kg by 3D volumetric laser scanner at origin hub. Excessive freight charge of \u20b9600 deducted. Merchant weighment slip and packaging dimensions photograph attached.",
-    "recipientEmail": "sntoshprajapati163@gmail.com",
+    "recipientEmail": "evaluator@demo-evaluation.com",
     "status": "PENDING",
     "resolutionSummary": null,
     "eligibleAmount": null,
     "timestamp": "2026-08-20T05:33:02.557Z",
-    "availableAt": 1789273340.953725
+    "availableAt": 1789623698.731825
   },
   {
     "disputeId": "DISP-88225",
@@ -46,12 +46,12 @@
     "claimedWeightKg": 24.5,
     "billedWeightKg": 24.5,
     "disputeRemarks": "Inbound consignment PO#99120 handover manifest confirms 50 cookware units dispatched, but FC dock inwarding receipt recorded only 38 units received. Variance of 12 missing units valued at \u20b915,224. Verified dock supervisor signature and physical count sheet attached.",
-    "recipientEmail": "sntoshprajapati163@gmail.com",
+    "recipientEmail": "evaluator@demo-evaluation.com",
     "status": "PENDING",
     "resolutionSummary": null,
     "eligibleAmount": null,
     "timestamp": "2026-08-20T06:33:02.557Z",
-    "availableAt": 1789273640.953725
+    "availableAt": 1789623998.731825
   },
   {
     "disputeId": "DISP-88226",
@@ -64,12 +64,12 @@
     "claimedWeightKg": 8.4,
     "billedWeightKg": 8.4,
     "disputeRemarks": "High-value electronics consignment (invoice value \u20b945,150) has had no operational or hub movement scan since 2026-07-24 at Bilaspur transshipment center (over 15 days inactive). Tracking audit confirmed package untraceable. LIT claim filed under Section 4.1 Carrier Liability.",
-    "recipientEmail": "sntoshprajapati163@gmail.com",
+    "recipientEmail": "evaluator@demo-evaluation.com",
     "status": "PENDING",
     "resolutionSummary": null,
     "eligibleAmount": null,
     "timestamp": "2026-08-20T07:33:02.557Z",
-    "availableAt": 1789273940.953725
+    "availableAt": 1789624298.731825
   },
   {
     "disputeId": "DISP-88227",
@@ -82,12 +82,12 @@
     "claimedWeightKg": 0.35,
     "billedWeightKg": 1.4,
     "disputeRemarks": "Organic skincare parcel with dead weight 0.35 kg was billed at 1.40 kg due to courier volumetric overcharge. Freight overbilling variance of \u20b9980 applied to seller payout. Origin dead weight receipt and product tare weight certificate provided.",
-    "recipientEmail": "sntoshprajapati163@gmail.com",
+    "recipientEmail": "evaluator@demo-evaluation.com",
     "status": "PENDING",
     "resolutionSummary": null,
     "eligibleAmount": null,
     "timestamp": "2026-08-20T08:33:02.557Z",
-    "availableAt": 1789274240.953725
+    "availableAt": 1789624598.731825
   },
   {
     "disputeId": "DISP-88219",
@@ -100,12 +100,12 @@
     "claimedWeightKg": 1.1,
     "billedWeightKg": 1.1,
     "disputeRemarks": "Carrier SLA delay penalty of \u20b91,240 charged incorrectly. Consignment dispatch delayed due to upstream marketplace EDI server outage on 2026-07-18. System outage bulletin and server error timestamps provided for penalty waiver.",
-    "recipientEmail": "sntoshprajapati163@gmail.com",
+    "recipientEmail": "evaluator@demo-evaluation.com",
     "status": "PENDING",
     "resolutionSummary": null,
     "eligibleAmount": null,
     "timestamp": "2026-08-20T01:33:02.557Z",
-    "availableAt": 1789272140.953725
+    "availableAt": 1789622498.731825
   },
   {
     "disputeId": "DISP-88220",
@@ -118,12 +118,12 @@
     "claimedWeightKg": 0.6,
     "billedWeightKg": 0.6,
     "disputeRemarks": "Customer return package under AWB-IN-7749229 received in tampered condition with outer security tape sliced. Unboxing video recorded at returns desk shows duplicate soap bars inside instead of Smart Watch (SKU: ORB-991). SPF claim filed for product value of \u20b91,674.",
-    "recipientEmail": "sntoshprajapati163@gmail.com",
+    "recipientEmail": "evaluator@demo-evaluation.com",
     "status": "PENDING",
     "resolutionSummary": null,
     "eligibleAmount": null,
     "timestamp": "2026-08-20T02:33:02.557Z",
-    "availableAt": 1789272440.953725
+    "availableAt": 1789622798.731825
   },
   {
     "disputeId": "DISP-88221",
@@ -136,11 +136,11 @@
     "claimedWeightKg": 9,
     "billedWeightKg": 9,
     "disputeRemarks": "Warehouse inwarding reconciliation for PO#88312 shows a discrepancy: dock receipt logged 25 units received, but final bin placement recorded only 21 units (shortage of 4 units, claimed amount \u20b93,074). Physical GRN discrepancy report and CCTV timestamp attached.",
-    "recipientEmail": "sntoshprajapati163@gmail.com",
+    "recipientEmail": "evaluator@demo-evaluation.com",
     "status": "PENDING",
     "resolutionSummary": null,
     "eligibleAmount": null,
     "timestamp": "2026-08-20T03:33:02.557Z",
-    "availableAt": 1789272740.953725
+    "availableAt": 1789623098.731825
   }
 ]

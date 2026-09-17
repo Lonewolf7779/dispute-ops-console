@@ -59,8 +59,49 @@ STATUS_SYNONYMS = {
     "ON_HOLD": STATUS_WAITING_FOR_CLIENT,
 }
 
+DEFAULT_FALLBACK_RECIPIENT = "evaluator@demo-evaluation.com"
+active_evaluator_email = None
+
 app = Flask(__name__)
 disputes_store = []
+
+
+def is_valid_email(email):
+    if not isinstance(email, str):
+        return False
+    email = email.strip()
+    return bool(re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", email))
+
+
+def get_effective_recipient():
+    # 1. Header if provided by caller
+    header_email = request.headers.get("X-Evaluator-Email")
+    if header_email and is_valid_email(header_email):
+        return header_email.strip()
+
+    # 2. Query param if provided
+    query_email = request.args.get("evaluatorEmail") or request.args.get("evaluator_email")
+    if query_email and is_valid_email(query_email):
+        return query_email.strip()
+
+    # 3. Active session email stored in memory
+    if active_evaluator_email and is_valid_email(active_evaluator_email):
+        return active_evaluator_email
+
+    # 4. Default fallback
+    return DEFAULT_FALLBACK_RECIPIENT
+
+
+def format_dispute_for_response(item):
+    if item is None:
+        return None
+    if isinstance(item, list):
+        return [format_dispute_for_response(x) for x in item]
+    if isinstance(item, dict):
+        copied = deepcopy(item)
+        copied["recipientEmail"] = get_effective_recipient()
+        return copied
+    return item
 
 
 def read_disputes():
@@ -325,6 +366,39 @@ def summary(records):
     return values
 
 
+@app.post("/api/evaluator-email")
+def set_evaluator_email():
+    global active_evaluator_email
+    payload = parse_flexible_json_payload()
+    email = (
+        payload.get("evaluatorEmail")
+        or payload.get("email")
+        or payload.get("evaluator_email")
+        or payload.get("recipientEmail")
+    )
+    if not email or not is_valid_email(email):
+        return jsonify({
+            "success": False,
+            "message": "Please enter a valid email address."
+        }), 400
+
+    active_evaluator_email = email.strip()
+    return jsonify({
+        "success": True,
+        "message": "Active evaluator email registered successfully.",
+        "evaluatorEmail": active_evaluator_email
+    })
+
+
+@app.get("/api/evaluator-email")
+def get_evaluator_email_info():
+    return jsonify({
+        "evaluatorEmail": active_evaluator_email,
+        "hasEvaluator": bool(active_evaluator_email and is_valid_email(active_evaluator_email)),
+        "effectiveRecipient": get_effective_recipient(),
+    })
+
+
 @app.get("/api/disputes")
 def get_active_dispute():
     current = oldest_pending(disputes_store)
@@ -335,7 +409,7 @@ def get_active_dispute():
             "data": None,
             "nextAvailableInSeconds": next_release_seconds(disputes_store),
         })
-    return jsonify(current)
+    return jsonify(format_dispute_for_response(current))
 
 
 @app.get("/disputes")
@@ -392,7 +466,7 @@ def add_random_dispute():
         "awbNumber": f"AWB-IN-{random.randint(7700000, 7799999)}",
         **template,
         "incidentDate": now.date().isoformat(),
-        "recipientEmail": "sntoshprajapati163@gmail.com",
+        "recipientEmail": DEFAULT_FALLBACK_RECIPIENT,
         "status": STATUS_PENDING,
         "resolutionSummary": None,
         "eligibleAmount": None,
@@ -410,8 +484,8 @@ def add_random_dispute():
     persist_store()
     return jsonify({
         "message": "One random pending dispute was added.",
-        "createdDispute": random_dispute,
-        "activeDispute": oldest_pending(records),
+        "createdDispute": format_dispute_for_response(random_dispute),
+        "activeDispute": format_dispute_for_response(oldest_pending(records)),
     }), 201
 
 
@@ -435,6 +509,7 @@ def reset_disputes():
     return jsonify({
         "message": "All disputes were cleared and the default dataset was restored.",
         "summary": summary(records),
+        "evaluatorEmail": get_effective_recipient()
     })
 
 
@@ -445,17 +520,17 @@ def reset_disputes_public_alias():
 
 @app.get("/api/disputes/resolved")
 def get_resolved_disputes():
-    return jsonify(by_status(disputes_store, STATUS_RESOLVED))
+    return jsonify(format_dispute_for_response(by_status(disputes_store, STATUS_RESOLVED)))
 
 
 @app.get("/api/disputes/escalated")
 def get_escalated_disputes():
-    return jsonify(by_status(disputes_store, STATUS_ESCALATED))
+    return jsonify(format_dispute_for_response(by_status(disputes_store, STATUS_ESCALATED)))
 
 
 @app.get("/api/disputes/waiting-for-client")
 def get_waiting_disputes():
-    return jsonify(by_status(disputes_store, STATUS_WAITING_FOR_CLIENT))
+    return jsonify(format_dispute_for_response(by_status(disputes_store, STATUS_WAITING_FOR_CLIENT)))
 
 
 @app.get("/api/disputes/summary")
@@ -504,8 +579,8 @@ def resolve_dispute(dispute_id):
 
     return jsonify({
         "message": "Dispute status updated successfully.",
-        "updatedDispute": updated,
-        "nextPendingDispute": next_pending,
+        "updatedDispute": format_dispute_for_response(updated),
+        "nextPendingDispute": format_dispute_for_response(next_pending),
         "nextAvailableInSeconds": next_release_seconds(records),
     })
 
@@ -562,8 +637,8 @@ def resolve_dispute_for_bot():
     return jsonify({
         "success": True,
         "message": f"Dispute {dispute_id} successfully resolved and updated.",
-        "updatedDispute": disputes_store[index],
-        "nextPendingDispute": next_pending,
+        "updatedDispute": format_dispute_for_response(disputes_store[index]),
+        "nextPendingDispute": format_dispute_for_response(next_pending),
         "nextAvailableInSeconds": next_release_seconds(disputes_store),
     })
 
@@ -581,6 +656,8 @@ def health():
         "healthy": len(issues) == 0,
         "totalRecords": len(records),
         "invalidRows": issues,
+        "activeEvaluatorEmail": active_evaluator_email,
+        "effectiveRecipient": get_effective_recipient(),
     })
 
 
